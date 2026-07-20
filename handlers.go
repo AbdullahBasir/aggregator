@@ -96,3 +96,12 @@ func handlerReset(s *state, cmd command) error {
 	fmt.Printf("Users have been reset\n")
 	return nil
 }
+
+func handlerAgg(s *state, cmd command) error {
+	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return fmt.Errorf("could not fetch the feed: %w", err)
+	}
+	fmt.Printf("%+v\n", feed)
+	return nil
+}
