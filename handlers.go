@@ -127,7 +127,19 @@ func handlerAddFeed(s *state, cmd command) error {
 	if err != nil {
 		return fmt.Errorf("could not store feed in database: %w", err)
 	}
-	fmt.Printf("%+v\n", feed)
+
+	feedFollow, err := s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    feed.UserID,
+		FeedID:    feed.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("could not create feed follow: %w", err)
+	}
+
+	fmt.Printf("* %s\n", feedFollow.FeedName)
 	return nil
 }
 
@@ -143,6 +155,56 @@ func handlerListFeeds(s *state, cmd command) error {
 	fmt.Printf("Feeds have been listed\n")
 	for _, user := range users {
 		fmt.Printf("* %s\n* %s\n* %s\n", user.Name_2, user.Url, user.Name)
+	}
+	return nil
+}
+
+func handlerFollow(s *state, cmd command) error {
+	if len(cmd.args) < 1 {
+		return errors.New("could not find url")
+	}
+	feed, err := s.db.GetFeedWithUrl(context.Background(), cmd.args[0])
+	if err != nil {
+		return fmt.Errorf("could not get feed: %w", err)
+	}
+
+	name := s.cfg.CurrentUserName
+	user, err := s.db.GetUser(context.Background(), name)
+	if err != nil {
+		return fmt.Errorf("could not get user: %w", err)
+	}
+	feedFollow, err := s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    user.ID,
+		FeedID:    feed.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("could not create feed follow: %w", err)
+	}
+	fmt.Printf("* %s\n* %s\n", feedFollow.FeedName, feedFollow.UserName)
+	return nil
+}
+
+func handlerFollowing(s *state, cmd command) error {
+	if len(cmd.args) > 0 {
+		return errors.New("bad input only command arg needed")
+	}
+
+	name := s.cfg.CurrentUserName
+	user, err := s.db.GetUser(context.Background(), name)
+	if err != nil {
+		return fmt.Errorf("could not get user: %w", err)
+	}
+
+	follows, err := s.db.GetFeedFollowsForUser(context.Background(), user.Name)
+	if err != nil {
+		return fmt.Errorf("could not get follows for user: %w", err)
+	}
+
+	for _, follow := range follows {
+		fmt.Printf("* %s\n", follow.FeedName)
 	}
 	return nil
 }

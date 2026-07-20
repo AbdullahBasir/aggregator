@@ -13,9 +13,9 @@ SELECT * FROM users
 WHERE name = $1;
 
 -- name: GetFeeds :many
-SELECT users.name, feed.url, feed.name
+SELECT users.name, feeds.url, feeds.name
 FROM users
-INNER JOIN feed ON users.id = feed.user_id;
+INNER JOIN feeds ON users.id = feeds.user_id;
 
 -- name: ListUsers :many
 SELECT * FROM users;

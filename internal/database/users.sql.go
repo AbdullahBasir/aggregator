@@ -48,9 +48,9 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const getFeeds = `-- name: GetFeeds :many
-SELECT users.name, feed.url, feed.name
+SELECT users.name, feeds.url, feeds.name
 FROM users
-INNER JOIN feed ON users.id = feed.user_id
+INNER JOIN feeds ON users.id = feeds.user_id
 `
 
 type GetFeedsRow struct {
