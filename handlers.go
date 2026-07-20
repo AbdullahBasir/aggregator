@@ -130,3 +130,19 @@ func handlerAddFeed(s *state, cmd command) error {
 	fmt.Printf("%+v\n", feed)
 	return nil
 }
+
+func handlerListFeeds(s *state, cmd command) error {
+	if len(cmd.args) > 0 {
+		return errors.New("bad input no command args needed")
+	}
+	users, err := s.db.GetFeeds(context.Background())
+	if err != nil {
+		return fmt.Errorf("could not get feed creator: %w", err)
+	}
+
+	fmt.Printf("Feeds have been listed\n")
+	for _, user := range users {
+		fmt.Printf("* %s\n* %s\n* %s\n", user.Name_2, user.Url, user.Name)
+	}
+	return nil
+}
