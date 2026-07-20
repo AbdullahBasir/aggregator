@@ -40,16 +40,23 @@ func main() {
 	}
 	inCommands.register("login", handlerLogin)
 	inCommands.register("register", handlerRegister)
+	inCommands.register("reset", handlerReset)
 	commandArgs := os.Args
 	if len(commandArgs) < 2 {
 		log.Fatal("command not found")
 	}
-	cmdName, cmdArg := commandArgs[1], commandArgs[2:]
-	err = inCommands.run(inState, command{
-		name: cmdName,
-		args: cmdArg,
-	})
-	if err != nil {
-		log.Fatalf("could not run command: %v", err)
+
+	switch commandArgs[1] {
+	case "register", "login", "reset":
+		cmdName, cmdArg := commandArgs[1], commandArgs[2:]
+		err = inCommands.run(inState, command{
+			name: cmdName,
+			args: cmdArg,
+		})
+		if err != nil {
+			log.Fatalf("could not run command: %v", err)
+		}
+	default:
+		log.Fatalf("could not run command, bad input")
 	}
 }

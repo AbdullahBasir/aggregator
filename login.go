@@ -35,7 +35,7 @@ func handlerLogin(s *state, cmd command) error {
 	if err != nil {
 		return fmt.Errorf("could not set username: %w", err)
 	}
-	fmt.Printf("Username: %s has been set", username)
+	fmt.Printf("Username: %s has been set\n", username)
 	return nil
 }
 
@@ -65,9 +65,18 @@ func handlerRegister(s *state, cmd command) error {
 		if err != nil {
 			return fmt.Errorf("could not set user data: %w", err)
 		}
-		fmt.Printf("User: %s was registered", data.Name)
+		fmt.Printf("User: %s was registered\n", data.Name)
 	} else {
 		return fmt.Errorf("unexpected db error: %w", err)
 	}
+	return nil
+}
+
+func handlerReset(s *state, cmd command) error {
+	err := s.db.ResetUser(context.Background())
+	if err != nil {
+		return fmt.Errorf("could not reset user: %w", err)
+	}
+	fmt.Printf("Users have been reset\n")
 	return nil
 }
