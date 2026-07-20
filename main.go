@@ -40,6 +40,7 @@ func main() {
 	}
 	inCommands.register("login", handlerLogin)
 	inCommands.register("register", handlerRegister)
+	inCommands.register("users", handlerListUsers)
 	inCommands.register("reset", handlerReset)
 	commandArgs := os.Args
 	if len(commandArgs) < 2 {
@@ -47,7 +48,7 @@ func main() {
 	}
 
 	switch commandArgs[1] {
-	case "register", "login", "reset":
+	case "register", "login", "users", "reset":
 		cmdName, cmdArg := commandArgs[1], commandArgs[2:]
 		err = inCommands.run(inState, command{
 			name: cmdName,

@@ -7,3 +7,13 @@ VALUES (
     $4
 )
 RETURNING *;
+
+-- name: GetUser :one
+SELECT * FROM users 
+WHERE name = $1;
+
+-- name: ListUsers :many
+SELECT * FROM users;
+
+-- name: ResetUser :exec
+DELETE FROM users;
