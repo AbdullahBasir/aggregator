@@ -106,14 +106,9 @@ func handlerAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.args) < 2 {
 		return errors.New("command must include feed name and url")
-	}
-	username := s.cfg.CurrentUserName
-	user, err := s.db.GetUser(context.Background(), username)
-	if err != nil {
-		return fmt.Errorf("could not get user from database: %w", err)
 	}
 
 	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
@@ -159,7 +154,7 @@ func handlerListFeeds(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.args) < 1 {
 		return errors.New("could not find url")
 	}
@@ -168,11 +163,6 @@ func handlerFollow(s *state, cmd command) error {
 		return fmt.Errorf("could not get feed: %w", err)
 	}
 
-	name := s.cfg.CurrentUserName
-	user, err := s.db.GetUser(context.Background(), name)
-	if err != nil {
-		return fmt.Errorf("could not get user: %w", err)
-	}
 	feedFollow, err := s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),
@@ -187,15 +177,9 @@ func handlerFollow(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollowing(s *state, cmd command) error {
+func handlerFollowing(s *state, cmd command, user database.User) error {
 	if len(cmd.args) > 0 {
 		return errors.New("bad input only command arg needed")
-	}
-
-	name := s.cfg.CurrentUserName
-	user, err := s.db.GetUser(context.Background(), name)
-	if err != nil {
-		return fmt.Errorf("could not get user: %w", err)
 	}
 
 	follows, err := s.db.GetFeedFollowsForUser(context.Background(), user.Name)
@@ -207,4 +191,19 @@ func handlerFollowing(s *state, cmd command) error {
 		fmt.Printf("* %s\n", follow.FeedName)
 	}
 	return nil
+}
+
+func middlewareLoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {
+	return func(s *state, cmd command) error {
+		name := s.cfg.CurrentUserName
+		if name == "" {
+			return fmt.Errorf("no current user name in config")
+		}
+
+		user, err := s.db.GetUser(context.Background(), name)
+		if err != nil {
+			return fmt.Errorf("could not get user: %w", err)
+		}
+		return handler(s, cmd, user)
+	}
 }

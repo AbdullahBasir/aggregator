@@ -42,11 +42,12 @@ func main() {
 	inCommands.register("register", handlerRegister)
 	inCommands.register("users", handlerListUsers)
 	inCommands.register("agg", handlerAgg)
-	inCommands.register("addfeed", handlerAddFeed)
 	inCommands.register("feeds", handlerListFeeds)
-	inCommands.register("follow", handlerFollow)
-	inCommands.register("following", handlerFollowing)
 	inCommands.register("reset", handlerReset)
+	inCommands.register("addfeed", middlewareLoggedIn(handlerAddFeed))
+	inCommands.register("follow", middlewareLoggedIn(handlerFollow))
+	inCommands.register("following", middlewareLoggedIn(handlerFollowing))
+
 	commandArgs := os.Args
 	if len(commandArgs) < 2 {
 		log.Fatal("command not found")
