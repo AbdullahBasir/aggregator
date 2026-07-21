@@ -47,6 +47,7 @@ func main() {
 	inCommands.register("addfeed", middlewareLoggedIn(handlerAddFeed))
 	inCommands.register("follow", middlewareLoggedIn(handlerFollow))
 	inCommands.register("following", middlewareLoggedIn(handlerFollowing))
+	inCommands.register("unfollow", middlewareLoggedIn(handlerUnfollow))
 
 	commandArgs := os.Args
 	if len(commandArgs) < 2 {
@@ -54,7 +55,7 @@ func main() {
 	}
 
 	switch commandArgs[1] {
-	case "register", "login", "users", "agg", "addfeed", "feeds", "follow", "following", "reset":
+	case "register", "login", "users", "agg", "addfeed", "feeds", "follow", "following", "unfollow", "reset":
 		cmdName, cmdArg := commandArgs[1], commandArgs[2:]
 		err = inCommands.run(inState, command{
 			name: cmdName,
