@@ -1,4 +1,4 @@
-### Gator — RSS Feed Aggregator CLI
+### Gator — RSS Feed Aggregator CLI - Boot.dev project
 
 Gator is a command-line RSS feed aggregator written in Go. It lets you register
 users, add RSS feeds, follow/unfollow feeds, periodically scrape them, and
