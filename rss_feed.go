@@ -38,10 +38,10 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not get response: %w", err)
 	}
+	defer response.Body.Close()
 	if response.StatusCode >= 400 {
 		return nil, fmt.Errorf("bad status code: %d", response.StatusCode)
 	}
-	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {

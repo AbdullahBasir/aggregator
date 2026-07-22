@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/AbdullahBasir/aggregator/internal/database"
@@ -51,8 +52,13 @@ func scrapeFeeds(s *state) error {
 	fmt.Printf("\n--- %s ---\n", feed.Name)
 	for _, item := range rssFeed.Channel.Item {
 		publishedAt := sql.NullTime{}
-		t, err := time.Parse(time.RFC1123Z, item.PubDate)
-		if err == nil {
+
+		if t, err := time.Parse(time.RFC1123Z, item.PubDate); err == nil {
+			publishedAt = sql.NullTime{
+				Time:  t,
+				Valid: true,
+			}
+		} else if t, err := time.Parse(time.RFC1123, item.PubDate); err == nil {
 			publishedAt = sql.NullTime{
 				Time:  t,
 				Valid: true,
@@ -71,7 +77,9 @@ func scrapeFeeds(s *state) error {
 			FeedID:      feed.ID,
 		})
 		if err != nil {
-			log.Print("duplicate key value violates unique constraint")
+			if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+				continue
+			}
 			log.Printf("couldn't create post: %v", err)
 			continue
 		}
