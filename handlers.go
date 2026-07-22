@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/AbdullahBasir/aggregator/internal/database"
@@ -98,12 +99,22 @@ func handlerReset(s *state, cmd command) error {
 }
 
 func handlerAgg(s *state, cmd command) error {
-	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
-	if err != nil {
-		return fmt.Errorf("could not fetch the feed: %w", err)
+	if len(cmd.args) < 1 {
+		return errors.New("command must include duration time")
 	}
-	fmt.Printf("%+v\n", feed)
-	return nil
+	timeBetweenRequests, err := time.ParseDuration(cmd.args[0])
+	if err != nil {
+		return fmt.Errorf("could not parse duration: %v", err)
+	}
+
+	fmt.Printf("Collecting feeds every %v\n", timeBetweenRequests)
+	ticker := time.NewTicker(timeBetweenRequests)
+	for ; ; <-ticker.C {
+		err = scrapeFeeds(s)
+		if err != nil {
+			log.Printf("could not scrape feeds: %v", err)
+		}
+	}
 }
 
 func handlerAddFeed(s *state, cmd command, user database.User) error {
@@ -226,4 +237,27 @@ func middlewareLoggedIn(handler func(s *state, cmd command, user database.User) 
 		}
 		return handler(s, cmd, user)
 	}
+}
+
+func scrapeFeeds(s *state) error {
+	feed, err := s.db.GetNextFeedToFetch(context.Background())
+	if err != nil {
+		return fmt.Errorf("could not fetch next feed: %w", err)
+	}
+
+	err = s.db.MarkFeedFetched(context.Background(), feed.ID)
+	if err != nil {
+		return fmt.Errorf("could not mark feed as fetched: %w", err)
+	}
+
+	rssFeed, err := fetchFeed(context.Background(), feed.Url)
+	if err != nil {
+		return fmt.Errorf("could not fetch feed: %w", err)
+	}
+
+	fmt.Printf("\n--- %s ---\n", feed.Name)
+	for _, item := range rssFeed.Channel.Item {
+		fmt.Printf("* %s\n", item.Title)
+	}
+	return nil
 }
