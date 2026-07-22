@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 
@@ -48,6 +50,7 @@ func main() {
 	inCommands.register("follow", middlewareLoggedIn(handlerFollow))
 	inCommands.register("following", middlewareLoggedIn(handlerFollowing))
 	inCommands.register("unfollow", middlewareLoggedIn(handlerUnfollow))
+	inCommands.register("browse", middlewareLoggedIn(handlerBrowse))
 
 	commandArgs := os.Args
 	if len(commandArgs) < 2 {
@@ -55,7 +58,7 @@ func main() {
 	}
 
 	switch commandArgs[1] {
-	case "register", "login", "users", "agg", "addfeed", "feeds", "follow", "following", "unfollow", "reset":
+	case "register", "login", "users", "agg", "addfeed", "feeds", "follow", "following", "unfollow", "browse", "reset":
 		cmdName, cmdArg := commandArgs[1], commandArgs[2:]
 		err = inCommands.run(inState, command{
 			name: cmdName,
@@ -66,5 +69,20 @@ func main() {
 		}
 	default:
 		log.Fatalf("could not run command, bad input")
+	}
+}
+
+func middlewareLoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {
+	return func(s *state, cmd command) error {
+		name := s.cfg.CurrentUserName
+		if name == "" {
+			return fmt.Errorf("no current user name in config")
+		}
+
+		user, err := s.db.GetUser(context.Background(), name)
+		if err != nil {
+			return fmt.Errorf("could not get user: %w", err)
+		}
+		return handler(s, cmd, user)
 	}
 }
